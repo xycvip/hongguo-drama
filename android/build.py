@@ -61,6 +61,10 @@ def main():
         xml = xml.replace('<application ', '<uses-feature android:name="android.software.leanback" android:required="true" /><uses-feature android:name="android.hardware.touchscreen" android:required="false" /><application android:banner="@drawable/tv_banner" ')
         xml = xml.replace('android:label="红果·自用"','android:label="红果短剧 TV"').replace('android:name=".MainActivity"','android:name="io.github.hongguo.personal.MainActivity" android:screenOrientation="landscape"')
         xml = xml.replace('android.intent.category.LAUNCHER','android.intent.category.LEANBACK_LAUNCHER')
+        xml = xml.replace(
+            '<category android:name="android.intent.category.LEANBACK_LAUNCHER" />',
+            '<category android:name="android.intent.category.LAUNCHER" /><category android:name="android.intent.category.LEANBACK_LAUNCHER" />'
+        )
         manifest.write_text(xml)
         (resources/'drawable/tv_banner.xml').write_text('<layer-list xmlns:android="http://schemas.android.com/apk/res/android"><item android:width="320dp" android:height="180dp"><shape><solid android:color="#171b25" /></shape></item><item android:width="120dp" android:height="120dp" android:gravity="center" android:drawable="@drawable/icon" /></layer-list>')
     run(['node',ROOT/'bundle.cjs',*(['--tv'] if tv else [])],env)
@@ -100,7 +104,7 @@ def main():
     if expected not in package or "sdkVersion:'29'" not in package or "targetSdkVersion:'34'" not in package:
         raise SystemExit('APK包信息不符合预期')
     checksum = hashlib.sha256(output.read_bytes()).hexdigest()
-    if tv and ("leanback-launchable-activity:" not in package or "uses-feature-not-required: name='android.hardware.touchscreen'" not in package):
+    if tv and ("launchable-activity:" not in package or "leanback-launchable-activity:" not in package or "uses-feature-not-required: name='android.hardware.touchscreen'" not in package):
         raise SystemExit('TV入口或无触屏声明缺失')
     (BUILD/'verification.json').write_text(json.dumps({'file':output.name,'sha256':checksum,'bytes':output.stat().st_size,'package':package_name,'version':version,'minSdk':29,'targetSdk':34,'signature_verified':True,'device_tested':False,'source_version':desktop_version,'candidate':tv},ensure_ascii=False,indent=2)+'\n')
     (BUILD/'signature.txt').write_text(signature)
